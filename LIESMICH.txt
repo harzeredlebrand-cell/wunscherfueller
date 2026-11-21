@@ -1,0 +1,51 @@
+JOHANNS WUNSCHERFÜLLER – App-Version 1.1
+=========================================
+
+Diese Version läuft als eigene kleine Web-App – ohne Claude, ohne Konto für Johann.
+Sie speichert auf dem Handy, funktioniert offline und der WhatsApp-Knopf geht.
+
+Inhalt des Ordners
+- index.html ............ die App
+- manifest.webmanifest .. App-Name, Farben und Symbol für den Startbildschirm
+- sw.js ................. sorgt dafür, dass die App auch ohne Internet startet
+- roboto.woff ........... Schrift (liegt bei, nichts wird von Google geladen)
+- icon-*.png ............ App-Symbole
+- OFL-Roboto.txt ........ Lizenz der Schrift (frei nutzbar, muss beiliegen)
+
+1) EINMALIG INS NETZ STELLEN (die Seite muss über https erreichbar sein)
+
+Variante A – GitHub Pages (kostenlos, dauerhaft)
+  1. Den Ordner „wunscherfueller“ in ein öffentliches GitHub-Repository hochladen.
+  2. Im Repository: Settings → Pages → Source „Deploy from a branch“ →
+     Branch „main“, Ordner „/ (root)“ → Save.
+  3. Nach 1–2 Minuten ist die App erreichbar unter
+     https://<github-name>.github.io/<repository>/wunscherfueller/
+
+Variante B – Netlify Drop (am Computer, ca. 3 Minuten)
+  1. https://app.netlify.com/drop öffnen und den Ordner (oder die ZIP) hineinziehen.
+  2. Kostenloses Konto anlegen und die Seite übernehmen („claim“) –
+     sonst wird sie nach einer Stunde wieder gelöscht.
+  3. Die Adresse endet auf .netlify.app und lässt sich in den Einstellungen umbenennen.
+
+Variante C – eigener Webspace mit Dateizugriff (FTP)
+  Den Ordner hochladen, z. B. nach /johann/.
+
+2) AUF JOHANNS HANDY EINRICHTEN
+  1. Link im normalen Browser öffnen (iPhone: Safari, Android: Chrome).
+     Falls er in WhatsApp aufgeht: erst „Im Browser öffnen“ wählen.
+  2. Sofort auf den Home-Bildschirm legen:
+     iPhone: Teilen-Symbol → „Zum Home-Bildschirm“
+     Android: Menü ⋮ → „App installieren“ / „Zum Startbildschirm hinzufügen“
+  3. Ab jetzt NUR noch über das neue Symbol öffnen.
+     (Beim iPhone hat die Home-Bildschirm-App einen eigenen Speicher –
+     was vorher in Safari eingetragen wurde, ist dort nicht zu sehen.)
+  4. Gemeinsam den Papa-Bereich öffnen und Papas PIN festlegen.
+     Dort auch Papas WhatsApp-Nummer eintragen.
+
+3) GUT ZU WISSEN
+  - Johanns Einträge liegen nur auf seinem Handy. Mit „An Papa melden“
+    schickt er seinen Stand per WhatsApp – mit Sicherungscode am Ende.
+  - Mit dem Code lässt sich alles wiederherstellen (Papa-Bereich →
+    „Sicherung einspielen“) – auch auf Papas Handy, um mitzulesen.
+  - Update der App: einfach die neuen Dateien über die alten hochladen.
+    Johanns Einträge bleiben dabei erhalten.

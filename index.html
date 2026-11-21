@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d3f37">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wunscherfüller">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Johanns Wunscherfüller</title>
+<style>
+/* VOICE   everyday tool for a 12-year-old: cheerful and bold, but a real tool that adds up
+   IDEA    every wish is a bottle from Papa's Brennerei – each hour of work fills it up to the Füllstrich
+   PICTURE large glass bottle with a hang tag, golden contents rising to the price of wish no. 1
+   COLOUR  bottle green #0d3f37 band, white ground, gold #ffc23d contents and buttons, coral #ff6a4d while the clock runs
+   TYPE    bundled Roboto: width axis 75 % at 800 for figures and titles, normal width for text
+   LAYOUT  phone: title, bottle beside balance, clock, form, wishes, history; from 960px two columns under the band */
+@font-face{font-family:"WF Text";src:url(roboto.woff) format("woff");font-weight:100 900;font-stretch:100%;font-display:swap}
+@font-face{font-family:"WF Cond";src:url(roboto.woff) format("woff");font-weight:100 900;font-stretch:75%;font-display:swap}
+:root{--bg:#fff;--ink:#0f2621;--muted:#4b665f;--panel:#f0f6f3;--line:#d2e2dc;--field:#fff;--bar:#0d3f37;--gold:#ffc23d;--gold2:#f0a500;--goldInk:#1f1700;--coral:#ff6a4d;--plus:#0a6b4c;--minus:#b3341b;--focus:#0a7d6c;--on:#0d3f37;--onInk:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#061a16;--ink:#e6f2ee;--muted:#9dbab2;--panel:#0c2823;--line:#1e463e;--field:#081f1b;--bar:#4fb59a;--plus:#72dfb1;--minus:#ff9078;--focus:#ffc23d;--on:#ffc23d;--onInk:#1f1700;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#061a16;--ink:#e6f2ee;--muted:#9dbab2;--panel:#0c2823;--line:#1e463e;--field:#081f1b;--bar:#4fb59a;--plus:#72dfb1;--minus:#ff9078;--focus:#ffc23d;--on:#ffc23d;--onInk:#1f1700;color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "WF Text",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
+h1,h2,h3,.cond{font-family:"WF Cond","Roboto Condensed","Arial Narrow",sans-serif;font-weight:800;line-height:1.05;letter-spacing:-.01em;margin:0}
+p{margin:0}
+.wrap{width:100%;max-width:1120px;margin:0 auto;padding-left:max(16px,4vw,env(safe-area-inset-left,0px));padding-right:max(16px,4vw,env(safe-area-inset-right,0px))}
+.ic{width:22px;height:22px;flex:none}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+.hero{background:#0d3f37;color:#fff;padding:calc(20px + env(safe-area-inset-top,0px)) 0 24px}
+.hero :focus-visible{outline-color:var(--gold)}
+h1{font-size:clamp(32px,8.6vw,52px);text-wrap:balance}
+.sub{margin-top:4px;color:#cfe5dd;font-size:16px}
+.stage{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px 18px;align-items:center;margin-top:12px}
+#bottle{display:block;width:100%;height:auto}
+.lbl{font-size:15px;font-weight:600;color:#bfe0d5}
+.bal{font:800 clamp(42px,12.5vw,76px)/1 "WF Cond","Roboto Condensed","Arial Narrow",sans-serif;color:var(--gold);white-space:nowrap;margin-top:2px}
+.bal.neg{color:#ff9a85}
+.note{margin-top:4px;font-size:15px;line-height:1.35;color:#d7ebe4}
+.next{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.22)}
+.nName{margin-top:2px;font-weight:700;font-size:18px;line-height:1.25}
+.left{margin-top:6px;font-family:"WF Cond","Roboto Condensed","Arial Narrow",sans-serif;font-weight:800;line-height:1;white-space:nowrap}
+.left b{font-size:clamp(36px,10vw,56px);color:var(--gold)}
+.left span{font-size:21px}
+.next .ready{margin-top:6px;font:800 32px/1 "WF Cond","Roboto Condensed","Arial Narrow",sans-serif;color:var(--gold)}
+.figs .btn{margin-top:14px}
+.kpis{display:none}
+#liq{transition:transform 1.4s cubic-bezier(.2,.8,.2,1)}
+.wave{animation:wave 5s linear infinite}
+@keyframes wave{to{transform:translateX(-40px)}}
+.spark{opacity:0;transition:opacity .5s}
+#bottle.full .spark{opacity:1}
+
+main.wrap{display:flex;flex-direction:column;gap:16px;padding-top:18px;padding-bottom:8px}
+.col{display:contents}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px}
+.card h2{font-size:30px}
+.card h3{font-size:21px}
+.head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.head h2{display:flex;align-items:center;gap:8px}
+.sum{margin-top:6px;color:var(--muted);font-size:15px}
+.sum:empty{display:none}
+.hint{color:var(--muted);font-size:15px}
+.err{color:var(--minus);font-weight:600;font-size:15px}
+.err:empty{display:none}
+.err.ok{color:var(--plus)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 18px;border-radius:12px;border:2px solid transparent;background:transparent;color:var(--ink);font:700 17px/1.15 "WF Text",system-ui,sans-serif;text-align:center;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--goldInk)}
+.btn.gold:active{background:var(--gold2);border-color:var(--gold2)}
+.btn.line{background:var(--bg);border-color:var(--line)}
+.btn.ghost{border-color:rgba(255,255,255,.55);color:#fff}
+.btn.danger{border-color:var(--minus);color:var(--minus);background:transparent}
+.btn.sm{min-height:44px;padding:6px 14px;font-size:16px}
+.btn.big{min-height:58px;font-size:21px;border-radius:14px}
+.btn.wide{width:100%}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.actions .btn.big{flex:1 1 auto}
+.sq{width:48px;height:48px;flex:none;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font:700 28px/1 "WF Text",system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.link{background:none;border:0;padding:0;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;min-height:44px}
+
+.clockHead{display:flex;gap:14px;align-items:flex-start}
+.clockHead .dot{width:48px;height:48px;border-radius:50%;background:#0d3f37;color:var(--gold);display:grid;place-items:center;flex:none}
+.clockHead p{margin-top:4px;color:var(--muted)}
+.wkNote{margin-top:8px;font-weight:600;color:var(--plus)}
+.clock .btn.big{margin-top:16px}
+.clock.on{background:var(--coral);border-color:var(--coral);color:#2a0b04}
+.clock.on .lbl{color:#4a1408}
+.tick{font:800 clamp(56px,18vw,84px)/1 "WF Cond","Roboto Condensed","Arial Narrow",sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;margin:6px 0 2px}
+.clock.on .btn.gold{background:#fff;border-color:#fff;color:#2a0b04}
+.clock.on .btn.line{background:transparent;border-color:rgba(42,11,4,.4);color:#2a0b04}
+
+.fld{display:block;margin-top:16px}
+.fld>span,.legend{display:block;font-weight:700;margin-bottom:6px}
+.fld i{font-style:normal;font-weight:400;color:var(--muted)}
+input,textarea{width:100%;min-height:48px;border:2px solid var(--line);border-radius:12px;background:var(--field);color:var(--ink);font:16px/1.3 "WF Text",system-ui,sans-serif;padding:10px 12px}
+textarea{resize:vertical;min-height:110px}
+input[type=date]{-webkit-appearance:none;appearance:none;display:block}
+input::-webkit-date-and-time-value{text-align:left}
+input:focus,textarea:focus{border-color:var(--focus);outline:none}
+.calc{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.stepper{display:flex;align-items:center;gap:8px;flex:1 1 250px}
+#fDur{flex:1;text-align:center;font:800 clamp(24px,7vw,30px)/1 "WF Cond","Roboto Condensed","Arial Narrow",sans-serif;white-space:nowrap}
+.earn{font:800 clamp(30px,9vw,40px)/1 "WF Cond","Roboto Condensed","Arial Narrow",sans-serif;color:var(--plus);white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{min-height:44px;padding:8px 14px;border-radius:999px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font:600 16px/1 "WF Text",system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed=true]{background:var(--on);border-color:var(--on);color:var(--onInk)}
+#entryHint{margin-top:10px;background:var(--bg);border:2px dashed var(--gold2);border-radius:12px;padding:10px 12px;color:var(--ink)}
+#entry.flash{animation:flash 1.4s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(255,194,61,.9)}100%{box-shadow:0 0 0 14px rgba(255,194,61,0)}}
+#entry.editing{border-color:var(--gold2)}
+
+.wishes{list-style:none;margin:0;padding:0}
+.wish{background:var(--bg);border:2px solid var(--line);border-radius:16px;padding:14px;margin-top:12px}
+.wish.ready{border-color:var(--gold)}
+.wTop{display:flex;align-items:center;gap:12px}
+.wName{flex:1}
+.wName b{display:block;font-size:18px;line-height:1.25}
+.wName span{color:var(--muted);font-size:15px;white-space:nowrap}
+.tag{position:relative;width:46px;height:54px;flex:none;border-radius:7px 7px 10px 10px;background:#fffaf0;border:1.5px solid #ddcca8;color:#0d3f37;display:grid;place-items:center;padding-top:8px}
+.tag::before{content:"";position:absolute;top:5px;left:50%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--bg);border:1.5px solid #ddcca8}
+.tag .ic{width:28px;height:28px}
+.tag em{position:absolute;right:-8px;top:-8px;width:24px;height:24px;border-radius:50%;background:var(--gold);color:var(--goldInk);font:800 15px/24px "WF Cond","Roboto Condensed","Arial Narrow",sans-serif;text-align:center;font-style:normal}
+.tag.sm{width:36px;height:42px}
+.tag.sm .ic{width:22px;height:22px}
+.bar{height:14px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:14px}
+.bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#f0a500,#ffc23d);transition:width .8s}
+.barTxt{display:flex;justify-content:space-between;gap:8px;margin-top:4px;font-size:14px;color:var(--muted);white-space:nowrap}
+.wLine{margin-top:8px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.wLine b{font:800 26px/1.1 "WF Cond","Roboto Condensed","Arial Narrow",sans-serif;white-space:nowrap}
+.wLine span{color:var(--muted)}
+.wLine.ok b{color:var(--plus)}
+.wSub{margin-top:4px;font-size:15px;color:var(--muted)}
+.wAct{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.wAct:empty{display:none}
+.done{list-style:none;margin:8px 0 0;padding:0}
+.done li{display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line)}
+.done b{display:block;line-height:1.25}
+.done span.d{display:block;color:var(--muted);font-size:14px}
+#doneBox{margin-top:18px}
+
+.weeks{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-top:4px}
+.wk{text-align:center}
+.wb{position:relative;height:92px;margin-top:22px;border-bottom:2px solid var(--line)}
+.wb i{position:absolute;left:14%;right:14%;bottom:0;border-radius:6px 6px 0 0;background:var(--bar)}
+.wk.now .wb i{background:var(--gold2)}
+.wb b{position:absolute;left:0;right:0;font:800 15px/1 "WF Cond","Roboto Condensed","Arial Narrow",sans-serif}
+.wl{display:block;margin-top:6px;font:700 13px/1.2 "WF Cond","Roboto Condensed","Arial Narrow",sans-serif;color:var(--muted);white-space:nowrap}
+.wkEmpty{margin-top:8px;color:var(--muted)}
+.mon{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 10px;margin:18px 0 2px}
+.mon small{font:600 15px "WF Text",system-ui,sans-serif;color:var(--muted);white-space:nowrap}
+.hist{list-style:none;margin:0;padding:0}
+.hrow{width:100%;display:grid;grid-template-columns:5.6em minmax(0,1fr) auto;gap:10px;align-items:start;min-height:48px;padding:10px 2px;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.hd{color:var(--muted);font-size:15px;white-space:nowrap;padding-top:1px}
+.hm b{display:block}
+.hm span{display:block;color:var(--muted);font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+.ha{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ha.plus{color:var(--plus)}
+.ha.minus{color:var(--minus)}
+.empty{margin-top:12px;color:var(--muted)}
+#histMore{margin-top:12px}
+
+.badges{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 8px}
+.badges li{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.medal{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;border:2px dashed var(--line);color:var(--muted);font:800 25px/1 "WF Cond","Roboto Condensed","Arial Narrow",sans-serif}
+.medal .ic{width:28px;height:28px}
+.got .medal{border:3px solid var(--gold2);background:radial-gradient(circle at 35% 30%,#ffe596,#ffc23d 55%,#f0a500);color:#0d3f37}
+.bt{font-weight:700;font-size:15px;line-height:1.2}
+.bp{font-size:13px;color:var(--muted)}
+.got .bp{color:var(--plus);font-weight:600}
+
+.papa .head .btn{flex:none}
+#papaLocked{margin-top:8px;color:var(--muted)}
+.pf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:end;padding:16px 0 0;margin-top:16px;border-top:1px solid var(--line)}
+.pf .fld{margin:0}
+.pf .full,.pf .btn,.pf .hint,.pf .err{grid-column:1/-1}
+.pTools{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+
+.banner{background:#fff1cc;color:#3b2a00}
+.install{background:var(--bg);border:2px solid var(--gold2)}
+.install .head .sq{width:44px;height:44px;font-size:26px}
+.install p{margin-top:6px}
+.install .btn{margin-top:14px}
+.banner .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding-top:12px;padding-bottom:12px}
+.banner.warn{background:#ffe0d8;color:#4a1408}
+.foot{padding-top:12px;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
+.foot p+p{margin-top:4px}
+
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:12px;width:max-content;max-width:calc(100vw - 24px);background:#0f2621;color:#fff;border-radius:14px;padding:8px 10px 8px 16px;box-shadow:0 6px 18px rgba(0,0,0,.25);font-weight:600}
+.toast button{background:none;border:0;color:var(--gold);font:700 16px "WF Text",system-ui,sans-serif;min-height:44px;padding:0 8px;cursor:pointer;flex:none}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:70}
+.confetti i{position:absolute;top:-16px;width:9px;height:15px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(760deg)}}
+
+dialog{border:0;border-radius:20px;padding:0;width:min(440px,calc(100vw - 24px));max-height:calc(100vh - 24px);background:var(--bg);color:var(--ink);box-shadow:0 18px 50px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(3,18,15,.62)}
+.dlgIn{padding:20px;display:flex;flex-direction:column;gap:12px}
+.dlgIn h3{font-size:30px}
+.dlgIn .fld{margin-top:0}
+#dlgB{display:flex;flex-direction:column;gap:10px}
+#dlgA{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+#dlgA .btn{flex:1 1 auto}
+pre.msg{white-space:pre-wrap;overflow-wrap:anywhere;font:15px/1.45 "WF Text",system-ui,sans-serif;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:0;max-height:38vh;overflow:auto}
+textarea.code{font:14px/1.35 ui-monospace,Menlo,Consolas,monospace;min-height:96px;overflow-wrap:anywhere}
+.icons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ico{position:relative}
+.ico input{position:absolute;opacity:0;width:1px;height:1px;min-height:0;padding:0}
+.ico span{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;min-height:68px;border:2px solid var(--line);border-radius:12px;cursor:pointer;color:var(--ink)}
+.ico input:checked+span{border-color:var(--on);background:var(--panel)}
+.ico input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.ico small{font-size:13px}
+.ico .ic{width:28px;height:28px}
+
+@media (min-width:720px){
+ .stage{grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:12px 36px}
+ .nName{font-size:21px}
+}
+@media (min-width:960px){
+ .stage{grid-template-columns:300px minmax(0,1fr) minmax(220px,280px)}
+ .kpis{display:block;list-style:none;margin:0;padding:0;align-self:center}
+ .kpis li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.2);color:#d7ebe4}
+ .kpis b{font:800 26px/1 "WF Cond","Roboto Condensed","Arial Narrow",sans-serif;color:#fff;white-space:nowrap}
+ main.wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start;padding-top:28px}
+ .col{display:flex;flex-direction:column;gap:24px}
+ .card{order:0!important}
+}
+@media (prefers-reduced-motion:reduce){
+ .wave,#entry.flash{animation:none}
+ #liq,.bar i,.spark{transition:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+ <symbol id="i-lenkrad" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.6"/><path d="M3.2 11.2c2.4-.9 4.6-.9 6.2.2M20.8 11.2c-2.4-.9-4.6-.9-6.2.2M12 14.6V21"/></g></symbol>
+ <symbol id="i-joystick" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="16" width="17" height="5" rx="1.6"/><path d="M12 16V9.5"/><circle cx="12" cy="6.2" r="3.2"/><path d="M16.5 13.5h2"/></g></symbol>
+ <symbol id="i-controller" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 7.5h9a4.6 4.6 0 0 1 4.5 5.5l-.7 3.6a2.4 2.4 0 0 1-4.2 1L14.6 16H9.4l-1.5 1.6a2.4 2.4 0 0 1-4.2-1L3 13a4.6 4.6 0 0 1 4.5-5.5z"/><path d="M8 10.5v3.5M6.25 12.25h3.5M15.5 11h.01M17.5 13h.01"/></g></symbol>
+ <symbol id="i-ball" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.6l3.9 2.8-1.5 4.5H9.6l-1.5-4.5zM12 7.6V3.2M15.9 10.4l4.1-1.6M14.4 14.9l2.6 3.7M9.6 14.9L7 18.6M8.1 10.4L4 8.8"/></g></symbol>
+ <symbol id="i-geschenk" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8.5h14V12M12 8v12.5M12 8c-1.6-3.6-5.6-3.6-4.8-1.1.4 1 2.6 1.1 4.8 1.1zm0 0c1.6-3.6 5.6-3.6 4.8-1.1-.4 1-2.6 1.1-4.8 1.1z"/></g></symbol>
+ <symbol id="i-stern" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6L12 16.8l-5.3 2.9 1.1-6-4.4-4.2 6-.8z"/></g></symbol>
+ <symbol id="i-etikett" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l9 9-8.7 8.7z"/><circle cx="8" cy="8" r="1.6"/></g></symbol>
+ <symbol id="i-uhr" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4.2l2.8 1.8M9.5 2.5h5M19 5.5l1.5 1.5"/></g></symbol>
+ <symbol id="i-msg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9.5L4 20.5z"/><path d="M8 9.5h8M8 12.5h5"/></g></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+ <symbol id="i-schloss" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
+ <symbol id="i-stift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4.2L19.5 8.7a2.1 2.1 0 0 0 0-3L18.3 4.5a2.1 2.1 0 0 0-3 0L4 15.8z"/><path d="M13.5 6.5l4 4"/></g></symbol>
+</svg>
+
+<header class="hero">
+ <div class="wrap">
+  <h1>Johanns Wunscherfüller</h1>
+  <p class="sub" id="sub">Aushilfe in Papas Brennerei · 5,00 € pro Stunde</p>
+  <div class="stage">
+   <svg id="bottle" viewBox="24 2 204 358" role="img" aria-labelledby="bottleT">
+    <title id="bottleT">Wunschflasche: zeigt, wie weit Wunsch Nr. 1 schon abgefüllt ist</title>
+    <defs>
+     <clipPath id="glass"><path d="M89 48H111V93C111 126 161 128 161 162V320Q161 339 142 339H58Q39 339 39 320V162C39 128 89 126 89 93Z"/></clipPath>
+     <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd659"/><stop offset="1" stop-color="#ef9800"/></linearGradient>
+    </defs>
+    <ellipse cx="100" cy="350" rx="74" ry="7" fill="#000" opacity=".28"/>
+    <path d="M84 44H116V92C116 122 166 124 166 160V322Q166 344 144 344H56Q34 344 34 322V160C34 124 84 122 84 92Z" fill="#fff" fill-opacity=".09"/>
+    <g clip-path="url(#glass)">
+     <g id="liq" style="transform:translateY(274px)">
+      <g class="wave">
+       <path fill="url(#gold)" d="M-80 70q10-8 20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0V440H-80Z"/>
+       <path fill="none" stroke="#ffeaa8" stroke-width="3" d="M-80 70q10-8 20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0t20 0"/>
+      </g>
+      <g fill="#fff" fill-opacity=".38"><circle cx="72" cy="150" r="4"/><circle cx="118" cy="205" r="3"/><circle cx="92" cy="262" r="5"/><circle cx="132" cy="120" r="2.5"/><circle cx="62" cy="300" r="3"/></g>
+     </g>
+     <g id="ticks" stroke="#fff" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"></g>
+     <rect x="45" y="168" width="9" height="146" rx="4.5" fill="#fff" fill-opacity=".24"/>
+     <rect x="92" y="54" width="4" height="34" rx="2" fill="#fff" fill-opacity=".22"/>
+     <rect x="146" y="150" width="20" height="200" fill="#000" fill-opacity=".13"/>
+    </g>
+    <rect x="87" y="16" width="26" height="36" rx="3" fill="#c8915a"/>
+    <path d="M91 25h18M91 33h18" stroke="#a8723f" stroke-width="2" stroke-linecap="round"/>
+    <path d="M84 44H116V92C116 122 166 124 166 160V322Q166 344 144 344H56Q34 344 34 322V160C34 124 84 122 84 92Z" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="81" y="42" width="38" height="9" rx="3" fill="#7fb3a6" fill-opacity=".55" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>
+    <rect x="82" y="6" width="36" height="14" rx="4" fill="#9b6537"/>
+    <path d="M82 70h36" stroke="#fff" stroke-width="2" stroke-dasharray="4 3"/>
+    <path d="M116 58C142 57 168 70 184 92" fill="none" stroke="#e9dcc0" stroke-width="1.6"/>
+    <g transform="translate(184 96) rotate(-8)">
+     <path d="M-14-10H14L28 4V80Q28 88 20 88H-20Q-28 88-28 80V4Z" fill="#fffaf0" stroke="#ddcca8" stroke-width="1.5"/>
+     <circle r="4.5" fill="#0d3f37" stroke="#ddcca8" stroke-width="1.5"/>
+     <use id="tagIcon" href="#i-lenkrad" x="-19" y="18" width="38" height="38" style="color:#0d3f37"/>
+     <rect x="-16" y="64" width="32" height="3.5" rx="1.75" fill="#cdbb93"/>
+     <rect x="-11" y="72" width="22" height="3.5" rx="1.75" fill="#cdbb93"/>
+    </g>
+    <g class="spark" fill="#ffeaa8">
+     <path d="M58 64l2-6 2 6 6 2-6 2-2 6-2-6-6-2z"/>
+     <path d="M136 30l1.6-5 1.6 5 5 1.6-5 1.6-1.6 5-1.6-5-5-1.6z"/>
+     <path d="M48 118l1.4-4.2 1.4 4.2 4.2 1.4-4.2 1.4-1.4 4.2-1.4-4.2-4.2-1.4z"/>
+    </g>
+   </svg>
+   <div class="figs">
+    <p class="lbl">Guthaben</p>
+    <p class="bal" id="bal">0,00 €</p>
+    <p class="note" id="balNote"></p>
+    <div class="next" id="next"></div>
+    <button class="btn ghost sm" type="button" data-act="report"><svg class="ic"><use href="#i-msg"/></svg>An Papa melden</button>
+   </div>
+   <ul class="kpis" id="kpis"></ul>
+  </div>
+ </div>
+</header>
+
+<div class="banner" id="banner" hidden><div class="wrap" id="bannerIn"></div></div>
+
+<main class="wrap">
+ <div class="col">
+  <section class="card install" id="install" style="order:0" aria-labelledby="installT" hidden>
+   <div class="head"><h2 id="installT">Als App aufs Handy</h2><button class="sq" type="button" data-act="install-close" aria-label="Hinweis ausblenden">×</button></div>
+   <p id="installTxt"></p>
+   <button class="btn gold" type="button" id="installBtn" data-act="install" hidden>App installieren</button>
+  </section>
+  <section class="card clock" id="clock" style="order:1" aria-labelledby="clockT">
+   <div id="clockIdle">
+    <div class="clockHead">
+     <span class="dot"><svg class="ic"><use href="#i-uhr"/></svg></span>
+     <div><h2 id="clockT">Stempeluhr</h2><p>Drück auf Start, wenn du loslegst. Bei Feierabend rechnet die Uhr aus, wie lange du gearbeitet hast.</p></div>
+    </div>
+    <p class="wkNote" id="wkNote" hidden></p>
+    <button class="btn gold big wide" type="button" data-act="clock-start">Schicht starten</button>
+   </div>
+   <div id="clockRun" hidden>
+    <p class="lbl" id="clockSince"></p>
+    <p class="tick" id="clockTime" aria-live="off">0:00:00</p>
+    <p id="clockEarn"></p>
+    <div class="actions"><button class="btn gold big" type="button" data-act="clock-stop">Feierabend</button><button class="btn line" type="button" data-act="clock-cancel">Abbrechen</button></div>
+   </div>
+  </section>
+
+  <section class="card" id="entry" style="order:2" aria-labelledby="entryT">
+   <h2 id="entryT">Stunden eintragen</h2>
+   <p id="entryHint" hidden></p>
+   <form id="entryF" autocomplete="off" novalidate>
+    <label class="fld"><span>Wann?</span><input type="date" id="fDate"></label>
+    <div class="fld"><span>Wie lange?</span>
+     <div class="calc">
+      <div class="stepper">
+       <button type="button" class="sq" data-act="minus" aria-label="15 Minuten weniger">−</button>
+       <output id="fDur" aria-live="polite">1 Std.</output>
+       <button type="button" class="sq" data-act="plus" aria-label="15 Minuten mehr">+</button>
+      </div>
+      <p class="earn" id="fEarn">= 5,00 €</p>
+     </div>
+     <div class="chips" id="durChips"></div>
+    </div>
+    <div class="fld"><span>Was hast du gemacht?</span><div class="chips" id="taskChips"></div></div>
+    <label class="fld"><span>Notiz <i>(wenn du magst)</i></span><input type="text" id="fNote" maxlength="80" placeholder="z. B. 60 Flaschen etikettiert"></label>
+    <p class="err" id="entryErr" role="alert"></p>
+    <div class="actions"><button type="submit" class="btn gold big" id="fSubmit">Eintragen</button><button type="button" class="btn line" id="fCancel" data-act="edit-cancel" hidden>Abbrechen</button></div>
+   </form>
+  </section>
+
+  <section class="card" id="badgeCard" style="order:5" aria-labelledby="badgeT">
+   <h2 id="badgeT">Abzeichen</h2>
+   <ul class="badges" id="badges"></ul>
+  </section>
+
+  <section class="card" id="backupCard" style="order:6" aria-labelledby="backupT">
+   <h2 id="backupT">Sicherung</h2>
+   <p class="sum">Deine Einträge sind nur auf diesem Handy gespeichert. In jeder Meldung an Papa steckt automatisch ein Sicherungscode – damit lässt sich alles wiederherstellen, falls das Handy mal streikt.</p>
+   <p class="wkNote" id="backupInfo"></p>
+   <div class="actions"><button class="btn gold" type="button" data-act="report">An Papa melden</button><button class="btn line" type="button" data-act="code">Nur den Code zeigen</button></div>
+  </section>
+ </div>
+
+ <div class="col">
+  <section class="card" id="wishCard" style="order:3" aria-labelledby="wishT">
+   <div class="head"><h2 id="wishT">Deine Wünsche</h2><button class="btn line sm" type="button" data-act="wish-new"><svg class="ic"><use href="#i-plus"/></svg>Neuer Wunsch</button></div>
+   <p class="sum" id="wishSum"></p>
+   <ol class="wishes" id="wishList"></ol>
+   <div id="doneBox" hidden><h3>Schon erfüllt</h3><ul class="done" id="doneList"></ul></div>
+  </section>
+
+  <section class="card" id="histCard" style="order:4" aria-labelledby="histT">
+   <h2 id="histT">Verlauf</h2>
+   <div class="weeks" id="weeks" aria-label="Stunden pro Woche, letzte 8 Wochen"></div>
+   <p class="sum" id="histSum"></p>
+   <div id="histList"></div>
+   <button class="btn line wide" type="button" id="histMore" data-act="more" hidden>Alle anzeigen</button>
+  </section>
+
+  <section class="card papa" id="papa" style="order:7" aria-labelledby="papaT">
+   <div class="head"><h2 id="papaT"><svg class="ic"><use href="#i-schloss"/></svg>Papa-Bereich</h2><button class="btn line sm" type="button" id="papaBtn" data-act="papa">Entsperren</button></div>
+   <p id="papaLocked">Hier stellt Papa den Stundenlohn ein, gibt Boni, zahlt Geld aus und spielt Sicherungen ein. Wünsche einlösen geht auch nur mit Papas PIN.</p>
+   <div id="papaOpen" hidden>
+    <form class="pf" data-form="rate"><label class="fld full"><span>Stundenlohn in €</span><input id="pRate" inputmode="decimal"></label><p class="hint">Gilt für neue Einträge. Alte Einträge behalten ihren Lohn.</p><p class="err"></p><button class="btn line" type="submit">Lohn speichern</button></form>
+    <form class="pf" data-form="bonus"><label class="fld"><span>Bonus in €</span><input id="pBonus" inputmode="decimal" placeholder="5"></label><label class="fld"><span>Wofür?</span><input id="pBonusT" maxlength="60" placeholder="Super geholfen"></label><p class="err"></p><button class="btn line" type="submit">Bonus geben</button></form>
+    <form class="pf" data-form="payout"><label class="fld"><span>Auszahlen in €</span><input id="pPay" inputmode="decimal" placeholder="20"></label><label class="fld"><span>Wofür?</span><input id="pPayT" maxlength="60" placeholder="Taschengeld bar"></label><p class="err"></p><button class="btn line" type="submit">Auszahlen</button></form>
+    <form class="pf" data-form="phone"><label class="fld full"><span>Papas WhatsApp-Nummer</span><input id="pPhone" type="tel" placeholder="0151 23456789"></label><p class="hint">Dann landet „An Papa melden“ direkt in eurem Chat.</p><p class="err"></p><button class="btn line" type="submit">Nummer speichern</button></form>
+    <div class="pTools"><button class="btn line sm" type="button" data-act="pin-change">PIN ändern</button><button class="btn line sm" type="button" data-act="restore">Sicherung einspielen</button><button class="btn danger sm" type="button" data-act="reset">Alles löschen</button></div>
+   </div>
+  </section>
+ </div>
+</main>
+
+<footer class="wrap foot">
+ <p>Alles bleibt auf diesem Handy gespeichert – nichts geht ins Internet, außer du schickst es Papa.</p>
+ <p>Version 1.1 · funktioniert auch offline</p>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span><button type="button" id="toastUndo">Rückgängig</button></div>
+<dialog id="dlg" aria-labelledby="dlgT"><div class="dlgIn"><h3 id="dlgT"></h3><div id="dlgB"></div><p class="err" id="dlgE" role="alert"></p><div id="dlgA"></div></div></dialog>
+
+<script>
+{
+const KEY = 'johanns-wunscherfueller-v1';
+const TASKS = [['abfuellen','Abfüllen'],['etiketten','Etikettieren'],['verpacken','Verpacken'],['aufraeumen','Aufräumen'],['sonstiges','Sonstiges']];
+const TASKNAME = {}; TASKS.forEach(t => { TASKNAME[t[0]] = t[1]; });
+const ICONS = [['lenkrad','Lenkrad'],['joystick','Steuerknüppel'],['controller','Controller'],['ball','Ball'],['geschenk','Geschenk'],['stern','Stern']];
+const DURS = [30, 60, 90, 120, 180, 240];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const EUR = new Intl.NumberFormat('de-DE', {style:'currency', currency:'EUR'});
+const eur = c => EUR.format(c / 100);
+const sgn = c => (c < 0 ? '−' : '+') + EUR.format(Math.abs(c) / 100);
+const nf1 = x => (Math.round(x * 10) / 10).toLocaleString('de-DE');
+const hrs = m => (Math.round(m / 60 * 100) / 100).toLocaleString('de-DE');
+const dur = m => { const h = Math.floor(m / 60), r = m % 60; return h ? (r ? h + ' Std. ' + r + ' Min.' : h + ' Std.') : r + ' Min.'; };
+const durShort = m => m < 60 ? m + ' Min.' : (m / 60).toLocaleString('de-DE') + ' Std.';
+const pad = n => String(n).padStart(2, '0');
+const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parse = s => { const p = String(s).split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+const todayIso = () => iso(new Date());
+const addDays = (d, n) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; };
+const monday = d => addDays(d, -((d.getDay() + 6) % 7));
+const fDay = new Intl.DateTimeFormat('de-DE', {weekday:'short', day:'2-digit', month:'2-digit'});
+const fLong = new Intl.DateTimeFormat('de-DE', {day:'numeric', month:'long'});
+const fMonth = new Intl.DateTimeFormat('de-DE', {month:'long', year:'numeric'});
+const fDate = new Intl.DateTimeFormat('de-DE', {day:'2-digit', month:'2-digit', year:'numeric'});
+const fTime = new Intl.DateTimeFormat('de-DE', {hour:'2-digit', minute:'2-digit'});
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const pay = e => Math.round(e.m * e.r / 60);
+const parseEur = s => { const t = String(s || '').replace(/[\s€]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'); const x = parseFloat(t); return isFinite(x) && /^\d*\.?\d*$/.test(t) ? Math.round(x * 100) : NaN; };
+const hash = s => { let h = 2166136261; const t = 'wf:' + s; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+const smooth = () => (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth';
+const taskTxt = t => t.map(k => TASKNAME[k] || k).join(', ');
+
+const fresh = () => ({v:1, rate:500, entries:[], moves:[], wishes:[
+  {id:'w1', name:'Lenkrad für die PlayStation', price:11000, icon:'lenkrad', done:null},
+  {id:'w2', name:'Steuerknüppel für den Flugsimulator', price:9000, icon:'joystick', done:null}],
+  pin:null, phone:'', timer:null, lastBackup:null, lastReport:null, changedAt:null, tasks:[]});
+
+let S = fresh(), storeOk = true, undoSnap = null, showAll = false, papaUntil = 0, papaWas = false, lockT = null, tickT = null, toastTimer = null, formToday = todayIso();
+const D = {m:60, t:[], edit:null};
+
+function load() { try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); } catch (e) { storeOk = false; } }
+function save(data) { if (data !== false) S.changedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); storeOk = true; } catch (e) { storeOk = false; } }
+function testStore() { try { localStorage.setItem(KEY + '-t', '1'); const ok = localStorage.getItem(KEY + '-t') === '1'; localStorage.removeItem(KEY + '-t'); return ok; } catch (e) { return false; } }
+function snap() { const c = Object.assign({}, S); delete c.timer; undoSnap = JSON.stringify(c); }
+function undo() { if (!undoSnap) return; const t = S.timer; S = Object.assign(fresh(), JSON.parse(undoSnap)); S.timer = t; undoSnap = null; save(); hideToast(); render(); }
+
+/* ---------- Rechnen ---------- */
+function stats() {
+  let earned = 0, min = 0, eti = 0, plus = 0, minus = 0;
+  S.entries.forEach(e => { earned += pay(e); min += e.m; if (e.t.indexOf('etiketten') >= 0) eti++; });
+  S.moves.forEach(m => { if (m.c > 0) plus += m.c; else minus -= m.c; });
+  return {earned, min, eti, plus, minus, n:S.entries.length, done:S.wishes.filter(w => w.done).length, bal:earned + plus - minus, streak:streak()};
+}
+function streak() {
+  const ks = Array.from(new Set(S.entries.map(e => iso(monday(parse(e.d)))))).sort();
+  let best = 0, run = 0, prev = null;
+  ks.forEach(k => { const d = parse(k); run = prev && Math.round((d - prev) / 864e5) === 7 ? run + 1 : 1; best = Math.max(best, run); prev = d; });
+  return best;
+}
+function pace() { // Minuten pro Tag, gemittelt über die letzten 4 Wochen
+  if (S.entries.length < 2) return 0;
+  const t = todayIso(); let first = t;
+  S.entries.forEach(e => { if (e.d < first) first = e.d; });
+  let start = iso(addDays(parse(t), -27)); if (first > start) start = first;
+  const days = Math.max(7, Math.round((parse(t) - parse(start)) / 864e5) + 1);
+  let sum = 0; S.entries.forEach(e => { if (e.d >= start && e.d <= t) sum += e.m; });
+  return sum / days;
+}
+const need = c => c <= 0 ? 0 : Math.ceil(c * 60 / S.rate / 15 - 1e-9) * 15; // Minuten, aufgerundet auf Viertelstunden
+function plan(st) {
+  const open = S.wishes.filter(w => !w.done), pc = pace();
+  let rest = Math.max(0, st.bal), cum = 0;
+  return open.map((w, i) => {
+    const alloc = Math.min(rest, w.price); rest -= alloc;
+    const miss = w.price - alloc; cum += miss;
+    const own = need(miss), tot = need(cum);
+    const eta = pc > 0 && tot > 0 ? addDays(parse(todayIso()), Math.ceil(tot / pc)) : null;
+    return {w, i, alloc, miss, own, tot, pct: w.price ? alloc / w.price : 0, can: st.bal >= w.price, eta};
+  });
+}
+function etaTxt(d) {
+  const days = Math.round((d - parse(todayIso())) / 864e5);
+  if (days > 365) return 'Bei deinem jetzigen Tempo dauert das noch über ein Jahr.';
+  return 'Bei deinem Tempo (Ø ' + nf1(pace() * 7 / 60) + ' Std. pro Woche) um den ' + fLong.format(d) + '.';
+}
+function weeks(n) {
+  const m0 = monday(new Date()), out = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const s = addDays(m0, -7 * i), sI = iso(s), eI = iso(addDays(s, 7));
+    let min = 0; S.entries.forEach(x => { if (x.d >= sI && x.d < eI) min += x.m; });
+    out.push({s, min});
+  }
+  return out;
+}
+
+/* ---------- Anzeige ---------- */
+function setBottle(p, icon, price) {
+  const q = Math.max(0, Math.min(1, p));
+  $('liq').style.transform = 'translateY(' + ((1 - q) * 274).toFixed(1) + 'px)';
+  $('tagIcon').setAttribute('href', '#i-' + (icon || 'stern'));
+  $('bottle').classList.toggle('full', q >= 1);
+  const total = price ? price / S.rate : 0;
+  const step = [1, 2, 5, 10, 20, 50, 100].filter(s => total / s <= 24)[0] || 200;
+  let h = '';
+  for (let x = step; x < total - 1e-9; x += step) { const y = 344 - x / total * 274; h += '<path d="M40 ' + y.toFixed(1) + 'h' + ((x / step) % 5 === 0 ? 16 : 9) + '"/>'; }
+  $('ticks').innerHTML = h;
+}
+function renderHero(st, pl) {
+  $('sub').textContent = 'Aushilfe in Papas Brennerei · ' + eur(S.rate) + ' pro Stunde';
+  $('bal').textContent = eur(st.bal);
+  $('bal').classList.toggle('neg', st.bal < 0);
+  $('balNote').textContent = st.n ? hrs(st.min) + ' Std. gearbeitet' + (st.minus ? ' · ' + eur(st.minus) + ' schon ausgegeben' : '') : 'Noch keine Stunde eingetragen. Die erste bringt ' + eur(S.rate) + '.';
+  const wk = weeks(1)[0].min;
+  $('kpis').innerHTML = [['Diese Woche', hrs(wk) + ' Std.'], ['Gearbeitet', hrs(st.min) + ' Std.'], ['Verdient', eur(st.earned + st.plus)], ['Eingelöst', eur(st.minus)]].map(k => '<li><span>' + k[0] + '</span><b>' + k[1] + '</b></li>').join('');
+  const top = pl[0];
+  if (!top) {
+    $('next').innerHTML = '<p class="lbl">Nächster Wunsch</p><p class="nName">Gerade ist kein Wunsch offen.</p><p class="note">Leg unten einen neuen an – dann füllt sich die nächste Flasche.</p>';
+    setBottle(0, null, 0); return;
+  }
+  $('next').innerHTML = top.can
+    ? '<p class="lbl">Wunsch Nr. 1</p><p class="nName">' + esc(top.w.name) + '</p><p class="ready">Fertig abgefüllt!</p><p class="note">Genug Geld für ' + eur(top.w.price) + ' – jetzt mit Papa einlösen.</p><button class="btn gold sm" type="button" data-act="wish-redeem" data-id="' + esc(top.w.id) + '">Mit Papa einlösen</button>'
+    : '<p class="lbl">Wunsch Nr. 1 · ' + eur(top.w.price) + '</p><p class="nName">' + esc(top.w.name) + '</p><p class="left"><span>noch </span><b>' + hrs(top.own) + '</b><span> Std.</span></p><p class="note">' + eur(top.miss) + ' fehlen · ' + Math.floor(top.pct * 100) + ' % abgefüllt</p>' + (top.eta ? '<p class="note">' + etaTxt(top.eta) + '</p>' : '');
+  setBottle(top.pct, top.w.icon, top.w.price);
+}
+function renderClock() {
+  const on = !!S.timer;
+  $('clock').classList.toggle('on', on); $('clockIdle').hidden = on; $('clockRun').hidden = !on;
+  clearInterval(tickT); tickT = null;
+  const wk = weeks(1)[0].min;
+  $('wkNote').hidden = !wk;
+  $('wkNote').textContent = 'Diese Woche schon ' + hrs(wk) + ' Std. – weiter so!';
+  if (on) {
+    const s = new Date(S.timer);
+    $('clockSince').textContent = 'Schicht läuft seit ' + fTime.format(s) + ' Uhr' + (iso(s) !== todayIso() ? ' (' + fDay.format(s) + ')' : '');
+    tick(); tickT = setInterval(tick, 1000);
+  }
+}
+function tick() {
+  if (!S.timer) return;
+  const s = Math.max(0, Math.floor((Date.now() - S.timer) / 1000));
+  $('clockTime').textContent = Math.floor(s / 3600) + ':' + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60);
+  $('clockEarn').textContent = 'bisher ≈ ' + eur(Math.round(s / 3600 * S.rate));
+}
+const rateNow = () => { const e = D.edit && S.entries.find(x => x.id === D.edit); return e ? e.r : S.rate; };
+function renderForm() {
+  $('fDur').textContent = dur(D.m);
+  $('fEarn').textContent = '= ' + eur(Math.round(D.m * rateNow() / 60));
+  Array.prototype.forEach.call($('durChips').children, b => b.setAttribute('aria-pressed', +b.dataset.v === D.m));
+  Array.prototype.forEach.call($('taskChips').children, b => b.setAttribute('aria-pressed', D.t.indexOf(b.dataset.v) >= 0));
+  $('entryT').textContent = D.edit ? 'Eintrag ändern' : 'Stunden eintragen';
+  $('fSubmit').textContent = D.edit ? 'Änderung speichern' : 'Eintragen';
+  $('fCancel').hidden = !D.edit;
+  $('entry').classList.toggle('editing', !!D.edit);
+}
+function wishItem(p) {
+  const w = p.w, pct = Math.floor(p.pct * 100);
+  let line = p.miss <= 0
+    ? '<p class="wLine ok"><b>Genug gespart!</b><span>Jetzt mit Papa einlösen.</span></p>'
+    : '<p class="wLine"><b>Noch ' + hrs(p.own) + ' Std.</b><span>' + eur(p.miss) + ' fehlen</span></p>';
+  if (p.miss > 0 && p.i > 0 && p.tot !== p.own) line += '<p class="wSub">Zusammen mit ' + (p.i === 1 ? 'Platz 1' : 'Platz 1–' + p.i) + ': ab heute ' + hrs(p.tot) + ' Std.</p>';
+  if (p.miss > 0 && p.can) line += '<p class="wSub">Das Geld reicht schon – wenn du ihn vorziehst, dauert Platz 1 aber länger.</p>';
+  else if (p.miss > 0 && p.eta) line += '<p class="wSub">' + etaTxt(p.eta) + '</p>';
+  return '<li class="wish' + (p.miss <= 0 ? ' ready' : '') + '">' +
+    '<div class="wTop"><span class="tag"><svg class="ic"><use href="#i-' + esc(w.icon) + '"/></svg><em>' + (p.i + 1) + '</em></span>' +
+    '<div class="wName"><b>' + esc(w.name) + '</b><span>' + eur(w.price) + ' = ' + hrs(need(w.price)) + ' Std.</span></div>' +
+    '<button class="sq" type="button" data-act="wish-edit" data-id="' + esc(w.id) + '" aria-label="' + esc(w.name) + ' bearbeiten"><svg class="ic"><use href="#i-stift"/></svg></button></div>' +
+    '<div class="bar" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + (p.pct * 100).toFixed(1) + '%"></i></div>' +
+    '<p class="barTxt"><span>' + eur(p.alloc) + ' von ' + eur(w.price) + '</span><span>' + pct + ' %</span></p>' + line +
+    '<div class="wAct">' + (p.can ? '<button class="btn gold" type="button" data-act="wish-redeem" data-id="' + esc(w.id) + '">Mit Papa einlösen</button>' : '') +
+    (p.i > 0 ? '<button class="btn line sm" type="button" data-act="wish-up" data-id="' + esc(w.id) + '">Vorziehen</button>' : '') + '</div></li>';
+}
+function renderWishes(st, pl) {
+  const all = pl.reduce((a, p) => a + p.w.price, 0), tot = pl.length ? pl[pl.length - 1].tot : 0;
+  $('wishSum').textContent = pl.length > 1
+    ? 'Alle ' + pl.length + ' Wünsche: ' + eur(all) + ' = ' + hrs(need(all)) + ' Std. Arbeit' + (st.bal > 0 ? ' · ab heute noch ' + hrs(tot) + ' Std.' : '')
+    : pl.length ? '' : 'Gerade ist kein Wunsch offen. Was wünschst du dir als Nächstes?';
+  $('wishList').innerHTML = pl.map(wishItem).join('');
+  const done = S.wishes.filter(w => w.done).sort((a, b) => a.done < b.done ? 1 : -1);
+  $('doneBox').hidden = !done.length;
+  $('doneList').innerHTML = done.map(w => '<li><span class="tag sm"><svg class="ic"><use href="#i-' + esc(w.icon) + '"/></svg></span><span><b>' + esc(w.name) + '</b><span class="d">' + eur(w.price) + ' · erfüllt am ' + fDate.format(parse(w.done)) + '</span></span></li>').join('');
+}
+const entryRow = e => '<li><button class="hrow" type="button" data-act="row" data-id="' + esc(e.id) + '"><span class="hd">' + fDay.format(parse(e.d)) + '</span><span class="hm"><b>' + dur(e.m) + '</b><span>' + esc(taskTxt(e.t) || 'Arbeit') + (e.n ? ' · ' + esc(e.n) : '') + '</span></span><span class="ha plus">' + sgn(pay(e)) + '</span></button></li>';
+const moveName = m => m.k === 'wunsch' ? 'Wunsch erfüllt' : m.k === 'bonus' ? 'Bonus' : 'Auszahlung';
+const moveRow = m => '<li><button class="hrow" type="button" data-act="row" data-id="' + esc(m.id) + '"><span class="hd">' + fDay.format(parse(m.d)) + '</span><span class="hm"><b>' + moveName(m) + '</b><span>' + esc(m.txt || '') + '</span></span><span class="ha ' + (m.c > 0 ? 'plus' : 'minus') + '">' + sgn(m.c) + '</span></button></li>';
+function renderHistory(st) {
+  const wk = weeks(8), max = Math.max(240, Math.max.apply(null, wk.map(x => x.min)));
+  $('weeks').hidden = !st.n;
+  $('weeks').innerHTML = wk.map((x, i) => { const p = x.min / max * 100; return '<div class="wk' + (i === 7 ? ' now' : '') + '"><div class="wb"><i style="height:' + p.toFixed(1) + '%"></i>' + (x.min ? '<b style="bottom:calc(' + p.toFixed(1) + '% + 4px)">' + hrs(x.min) + '</b>' : '') + '</div><span class="wl">' + (i === 7 ? 'jetzt' :pad(x.s.getDate()) + '.' + pad(x.s.getMonth() + 1) + '.') + '</span></div>'; }).join('');
+  $('histSum').textContent = st.n || S.moves.length ? 'Insgesamt ' + hrs(st.min) + ' Std. gearbeitet · ' + eur(st.earned) + ' verdient' + (st.plus ? ' · ' + eur(st.plus) + ' Bonus' : '') + (st.minus ? ' · ' + eur(st.minus) + ' ausgegeben' : '') : '';
+  const rows = S.entries.map(e => ({k:'e', d:e.d, at:e.at, o:e})).concat(S.moves.map(m => ({k:'m', d:m.d, at:m.at, o:m})))
+    .sort((a, b) => a.d === b.d ? b.at - a.at : (a.d < b.d ? 1 : -1));
+  if (!rows.length) { $('histList').innerHTML = '<p class="empty">Noch keine Einträge. Starte die Stempeluhr oder trag deine erste Schicht nach – jede Stunde bringt ' + eur(S.rate) + '.</p>'; $('histMore').hidden = true; return; }
+  const mt = {};
+  rows.forEach(r => { const k = r.d.slice(0, 7); mt[k] = mt[k] || {m:0, c:0}; if (r.k === 'e') { mt[k].m += r.o.m; mt[k].c += pay(r.o); } });
+  let html = '', cur = '';
+  (showAll ? rows : rows.slice(0, 12)).forEach(r => {
+    const k = r.d.slice(0, 7);
+    if (k !== cur) { if (cur) html += '</ul>'; cur = k; html += '<h3 class="mon"><span>' + fMonth.format(parse(k + '-01')) + '</span><small>' + hrs(mt[k].m) + ' Std. · ' + eur(mt[k].c) + '</small></h3><ul class="hist">'; }
+    html += r.k === 'e' ? entryRow(r.o) : moveRow(r.o);
+  });
+  $('histList').innerHTML = html + '</ul>';
+  $('histMore').hidden = rows.length <= 12;
+  $('histMore').textContent = showAll ? 'Weniger anzeigen' : 'Alle ' + rows.length + ' Einträge anzeigen';
+}
+const BADGES = [
+  {t:'Erste Schicht', sym:'1', v:st => st.n, g:1, u:v => v + ' von 1 Schicht'},
+  {t:'10 Stunden', sym:'10', v:st => st.min / 60, g:10, u:v => nf1(v) + ' von 10 Std.'},
+  {t:'50 € verdient', sym:'50', v:st => st.earned / 100, g:50, u:v => nf1(v) + ' von 50 €'},
+  {t:'Etiketten-Profi', icon:'etikett', v:st => st.eti, g:5, u:v => v + ' von 5× etikettiert'},
+  {t:'3 Wochen am Stück', sym:'3', v:st => st.streak, g:3, u:v => v + ' von 3 Wochen'},
+  {t:'Wunsch erfüllt', icon:'stern', v:st => st.done, g:1, u:v => v + ' von 1 Wunsch'}];
+function renderBadges(st) {
+  $('badges').innerHTML = BADGES.map(b => { const v = b.v(st), ok = v >= b.g; return '<li class="' + (ok ? 'got' : '') + '"><span class="medal">' + (b.icon ? '<svg class="ic"><use href="#i-' + b.icon + '"/></svg>' : b.sym) + '</span><span class="bt">' + b.t + '</span><span class="bp">' + (ok ? 'geschafft' : b.u(Math.min(v, b.g))) + '</span></li>'; }).join('');
+}
+const ago = ts => { const d = Math.round((parse(todayIso()) - parse(iso(new Date(ts)))) / 864e5); return d <= 0 ? 'heute' : d === 1 ? 'gestern' : 'vor ' + d + ' Tagen'; };
+function renderBackup() {
+  $('backupInfo').textContent = S.lastBackup ? 'Letzte Sicherung: ' + ago(S.lastBackup) : 'Letzte Sicherung: noch keine';
+  let oldest = Infinity; S.entries.forEach(e => { if (e.at < oldest) oldest = e.at; });
+  const due = S.entries.length && (S.changedAt || 0) > (S.lastBackup || 0) && Date.now() - (S.lastBackup || oldest) > 7 * 864e5;
+  const b = $('banner');
+  if (!storeOk) { b.hidden = false; b.className = 'banner warn'; $('bannerIn').innerHTML = '<p><b>Achtung:</b> Hier kann nichts gespeichert werden. Öffne den Link direkt in Safari oder Chrome und leg ihn dort auf den Home-Bildschirm.</p>'; }
+  else if (due) { b.hidden = false; b.className = 'banner'; $('bannerIn').innerHTML = '<p>Schon über eine Woche ohne Sicherung. Schick Papa kurz deinen Stand!</p><button class="btn gold sm" type="button" data-act="report">An Papa melden</button>'; }
+  else b.hidden = true;
+}
+function renderPapa() {
+  const open = Date.now() < papaUntil;
+  $('papaOpen').hidden = !open; $('papaLocked').hidden = open;
+  $('papaBtn').textContent = open ? 'Sperren' : 'Entsperren';
+  if (open && !papaWas) {
+    $('pRate').value = (S.rate / 100).toLocaleString('de-DE', {minimumFractionDigits:2});
+    $('pPhone').value = S.phone ? '+' + S.phone : '';
+    document.querySelectorAll('.pf .err').forEach(e => { e.textContent = ''; });
+  }
+  papaWas = open;
+}
+let installEvt = null;
+const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function renderInstall() {
+  const box = $('install'), touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+  if (isStandalone() || S.installHidden || (!touch && !installEvt)) { box.hidden = true; return; }
+  box.hidden = false; $('installBtn').hidden = !installEvt;
+  $('installTxt').textContent = installEvt
+    ? 'Mit einem Tipp landet der Wunscherfüller als App auf deinem Startbildschirm. Danach nur noch über das neue Symbol öffnen.'
+    : isIOS
+      ? 'Tippe in Safari auf das Teilen-Symbol (Quadrat mit Pfeil nach oben) und dann auf „Zum Home-Bildschirm“. Wichtig: Danach nur noch über das neue Symbol öffnen – dort bleiben deine Einträge gespeichert.'
+      : 'Tippe im Browser-Menü (⋮) auf „App installieren“ oder „Zum Startbildschirm hinzufügen“. Danach nur noch über das neue Symbol öffnen.';
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; renderInstall(); });
+window.addEventListener('appinstalled', () => { installEvt = null; renderInstall(); toast('Installiert! Öffne den Wunscherfüller ab jetzt über das neue Symbol.'); });
+function render() { const st = stats(), pl = plan(st); renderHero(st, pl); renderClock(); renderForm(); renderWishes(st, pl); renderHistory(st); renderBadges(st); renderBackup(); renderPapa(); renderInstall(); }
+
+/* ---------- Dialog, Toast, Konfetti ---------- */
+let dlgRes = null, dlgOpts = {};
+function formVals() { const f = {}; $('dlgB').querySelectorAll('[name]').forEach(i => { if (i.type === 'radio') { if (i.checked) f[i.name] = i.value; } else f[i.name] = i.value; }); return f; }
+function dialog(o) {
+  const dl = $('dlg'); if (dlgRes) close(null);
+  dlgOpts = o; const buttons = o.buttons || [{t:'OK', v:true, cls:'gold'}];
+  $('dlgT').textContent = o.title; $('dlgB').innerHTML = o.html || ''; $('dlgE').textContent = ''; $('dlgE').className = 'err';
+  $('dlgA').innerHTML = buttons.map((b, i) => '<button type="button" class="btn ' + (b.cls || 'line') + '" data-i="' + i + '">' + esc(b.t) + '</button>').join('');
+  return new Promise(res => {
+    dlgRes = res;
+    $('dlgA').onclick = ev => {
+      const b = ev.target.closest('button[data-i]'); if (!b) return;
+      const def = buttons[+b.dataset.i], f = formVals();
+      if (def.v != null && o.check) { const err = o.check(def.v, f); if (err) { $('dlgE').className = 'err'; $('dlgE').textContent = err; return; } }
+      close(def.v);
+    };
+    try { dl.showModal(); } catch (e) { dl.setAttribute('open', ''); }
+    const first = $('dlgB').querySelector('input:not([type=radio]),textarea:not([readonly])');
+    if (first) setTimeout(() => first.focus(), 60);
+  });
+}
+function close(v) {
+  const dl = $('dlg'), f = formVals();
+  try { if (dl.open) dl.close(); } catch (e) { dl.removeAttribute('open'); }
+  const r = dlgRes; dlgRes = null; if (r) r({v: v == null ? null : v, f});
+}
+$('dlg').addEventListener('cancel', ev => { ev.preventDefault(); close(null); });
+$('dlgB').addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') { ev.preventDefault(); const p = $('dlgA').querySelector('.gold'); if (p) p.click(); } });
+$('dlgB').addEventListener('click', ev => {
+  const c = ev.target.closest('[data-close]'); if (c) { close(c.dataset.close); return; }
+  if (ev.target.closest('[data-copy]') && dlgOpts.copyText != null) {
+    copy(dlgOpts.copyText).then(ok => { $('dlgE').className = ok ? 'err ok' : 'err'; $('dlgE').textContent = ok ? 'Kopiert! Jetzt in WhatsApp einfügen und an Papa schicken.' : 'Kopieren ging nicht. Halte den Finger auf den Text, markiere alles und kopiere es.'; if (ok && dlgOpts.onSent) dlgOpts.onSent(); });
+  }
+  if (ev.target.closest('[data-sent]') && dlgOpts.onSent) dlgOpts.onSent();
+  if (ev.target.closest('[data-share]') && navigator.share && dlgOpts.copyText != null) {
+    navigator.share({text: dlgOpts.copyText}).then(() => { if (dlgOpts.onSent) dlgOpts.onSent(); $('dlgE').className = 'err ok'; $('dlgE').textContent = 'Geteilt!'; }, () => {});
+  }
+});
+function copy(text) {
+  const fallback = () => { try { const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0'; $('dlg').appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch (e) { return false; } };
+  try { if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(() => true, fallback); } catch (e) {}
+  return Promise.resolve(fallback());
+}
+function toast(msg, canUndo) {
+  $('toastMsg').textContent = msg; $('toastUndo').hidden = !canUndo; $('toast').hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, canUndo ? 6500 : 3800);
+}
+function hideToast() { $('toast').hidden = true; undoSnap = null; }
+$('toastUndo').addEventListener('click', undo);
+function confetti() {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const box = document.createElement('div'), cols = ['#ffc23d', '#ff6a4d', '#ffffff', '#0d3f37', '#ffe596', '#4fb59a'];
+  box.className = 'confetti';
+  for (let i = 0; i < 70; i++) { const s = document.createElement('i'); s.style.left = (Math.random() * 100) + '%'; s.style.background = cols[i % cols.length]; s.style.animationDuration = (1.8 + Math.random() * 1.6) + 's'; s.style.animationDelay = (Math.random() * .5) + 's'; box.appendChild(s); }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 4200);
+}
+
+/* ---------- Papa-PIN ---------- */
+const pinFields = '<label class="fld"><span>Neue PIN (4–6 Ziffern)</span><input name="a" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></label><label class="fld"><span>PIN wiederholen</span><input name="b" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></label>';
+const pinCheck = (v, f) => !/^\d{4,6}$/.test(f.a || '') ? 'Bitte 4 bis 6 Ziffern eingeben.' : f.a !== f.b ? 'Die beiden PINs sind nicht gleich.' : '';
+function unlock() { papaUntil = Date.now() + 5 * 60e3; clearTimeout(lockT); lockT = setTimeout(renderPapa, 5 * 60e3 + 100); }
+async function papa(reason) {
+  if (Date.now() < papaUntil) { unlock(); return true; }
+  if (!S.pin) {
+    const r = await dialog({title:'Papa-PIN festlegen', html:'<p>„' + esc(reason) + '“ braucht Papas Freigabe. Papa, leg bitte eine PIN fest. Johann sollte sie nicht kennen.</p>' + pinFields, buttons:[{t:'Abbrechen', v:null}, {t:'PIN festlegen', v:1, cls:'gold'}], check:pinCheck});
+    if (!r.v) return false;
+    S.pin = hash(r.f.a); save(false); unlock(); renderPapa(); return true;
+  }
+  const r = await dialog({title:'Papa-Freigabe', html:'<p>„' + esc(reason) + '“ – dafür braucht es Papas PIN.</p><label class="fld"><span>PIN</span><input name="p" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></label><p><button type="button" class="link" data-close="forgot">PIN vergessen?</button></p>', buttons:[{t:'Abbrechen', v:null}, {t:'Freigeben', v:1, cls:'gold'}], check:(v, f) => hash(f.p || '') === S.pin ? '' : 'Die PIN stimmt nicht.'});
+  if (r.v === 'forgot') {
+    const q = await dialog({title:'PIN vergessen?', html:'<p>Dann darf Papa die PIN neu festlegen. Bitte wirklich nur Papa – Einträge und Guthaben bleiben dabei erhalten.</p>', buttons:[{t:'Abbrechen', v:null}, {t:'Ich bin Papa', v:1, cls:'gold'}]});
+    if (!q.v) return false;
+    S.pin = null; save(false); return papa(reason);
+  }
+  if (!r.v) return false;
+  unlock(); renderPapa(); return true;
+}
+
+/* ---------- Aktionen ---------- */
+function submitEntry(ev) {
+  ev.preventDefault();
+  const d = $('fDate').value, n = $('fNote').value.trim().slice(0, 80);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { $('entryErr').textContent = 'Bitte wähle das Datum aus.'; return; }
+  if (d > todayIso()) { $('entryErr').textContent = 'Das Datum liegt in der Zukunft.'; return; }
+  $('entryErr').textContent = '';
+  snap();
+  let msg;
+  const e = D.edit && S.entries.find(x => x.id === D.edit);
+  if (e) { e.d = d; e.m = D.m; e.t = D.t.slice(); e.n = n; msg = 'Eintrag geändert.'; }
+  else {
+    const ne = {id:uid(), d, m:D.m, t:D.t.slice(), n, r:S.rate, at:Date.now()};
+    S.entries.push(ne); S.tasks = D.t.slice();
+    const top = plan(stats())[0];
+    msg = sgn(pay(ne)) + ' verdient!' + (top ? (top.can ? ' Genug für „' + top.w.name + '“!' : ' Noch ' + hrs(top.own) + ' Std. für „' + top.w.name + '“.') : '');
+  }
+  save();
+  D.edit = null; D.m = 60; D.t = (S.tasks || []).slice();
+  $('fNote').value = ''; $('fDate').value = todayIso(); $('entryHint').hidden = true;
+  render(); toast(msg, true);
+}
+function startEdit(id) {
+  const e = S.entries.find(x => x.id === id); if (!e) return;
+  D.edit = id; D.m = e.m; D.t = e.t.slice();
+  $('fDate').value = e.d; $('fNote').value = e.n || ''; $('entryHint').hidden = true; $('entryErr').textContent = '';
+  renderForm(); $('entry').scrollIntoView({behavior:smooth(), block:'start'});
+}
+function stopEdit() { D.edit = null; D.m = 60; D.t = (S.tasks || []).slice(); $('fDate').value = todayIso(); $('fNote').value = ''; $('entryErr').textContent = ''; renderForm(); }
+function clockStop() {
+  const start = S.timer; if (!start) return;
+  const mins = (Date.now() - start) / 60000;
+  const m = Math.min(720, Math.max(15, Math.round(mins / 15) * 15));
+  S.timer = null; save(false);
+  D.edit = null; D.m = m; D.t = (S.tasks || []).slice();
+  $('fDate').value = iso(new Date(start)); $('fNote').value = ''; $('entryErr').textContent = '';
+  $('entryHint').textContent = 'Von der Stempeluhr: ' + fTime.format(new Date(start)) + '–' + fTime.format(new Date()) + ' Uhr (' + dur(Math.round(mins)) + '), auf die Viertelstunde gerundet: ' + dur(m) + '. Kurz prüfen, was du gemacht hast, und eintragen!' + (mins > 600 ? ' Ganz schön lang – hast du vergessen zu stoppen?' : '');
+  $('entryHint').hidden = false;
+  render();
+  const card = $('entry'); card.scrollIntoView({behavior:smooth(), block:'start'});
+  card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+}
+async function cancelClock() {
+  const r = await dialog({title:'Stempeluhr abbrechen?', html:'<p>Die Zeit seit dem Start wird dann nicht eingetragen.</p>', buttons:[{t:'Weiterlaufen lassen', v:null}, {t:'Abbrechen', v:1, cls:'danger'}]});
+  if (r.v) { S.timer = null; save(false); renderClock(); }
+}
+async function wishDialog(id) {
+  const w = id ? S.wishes.find(x => x.id === id) : null;
+  const icons = ICONS.map(k => '<label class="ico"><input type="radio" name="icon" value="' + k[0] + '"' + ((w ? w.icon : 'geschenk') === k[0] ? ' checked' : '') + '><span><svg class="ic"><use href="#i-' + k[0] + '"/></svg><small>' + k[1] + '</small></span></label>').join('');
+  const r = await dialog({
+    title: w ? 'Wunsch bearbeiten' : 'Neuer Wunsch',
+    html: '<label class="fld"><span>Was wünschst du dir?</span><input name="n" maxlength="40" value="' + (w ? esc(w.name) : '') + '" placeholder="z. B. Fußballschuhe"></label><label class="fld"><span>Was kostet das? (€)</span><input name="p" inputmode="decimal" value="' + (w ? esc((w.price / 100).toLocaleString('de-DE')) : '') + '" placeholder="z. B. 60"></label><div class="fld"><span class="legend">Bild</span><div class="icons">' + icons + '</div></div>',
+    buttons: w ? [{t:'Löschen', v:'del', cls:'danger'}, {t:'Abbrechen', v:null}, {t:'Speichern', v:'save', cls:'gold'}] : [{t:'Abbrechen', v:null}, {t:'Wunsch anlegen', v:'save', cls:'gold'}],
+    check: (v, f) => { if (v !== 'save') return ''; if (!(f.n || '').trim()) return 'Wie heißt dein Wunsch?'; const c = parseEur(f.p); return c > 0 && c <= 1000000 ? '' : 'Bitte einen Preis eingeben, z. B. 60 oder 59,99.'; }
+  });
+  if (r.v === 'save') {
+    snap(); const c = parseEur(r.f.p), name = r.f.n.trim();
+    if (w) { w.name = name; w.price = c; w.icon = r.f.icon || w.icon; } else S.wishes.push({id:uid(), name, price:c, icon:r.f.icon || 'geschenk', done:null});
+    save(); render(); toast(w ? 'Wunsch gespeichert.' : 'Neuer Wunsch: ' + name + ' – ' + hrs(need(c)) + ' Std. Arbeit.', true);
+  } else if (r.v === 'del' && w) {
+    const q = await dialog({title:'Wunsch löschen?', html:'<p>„' + esc(w.name) + '“ fliegt von deiner Liste. Dein Guthaben bleibt, wie es ist.</p>', buttons:[{t:'Behalten', v:null}, {t:'Löschen', v:1, cls:'danger'}]});
+    if (q.v) { snap(); S.wishes = S.wishes.filter(x => x.id !== w.id); save(); render(); toast('Wunsch gelöscht.', true); }
+  }
+}
+function wishUp(id) {
+  const open = S.wishes.filter(w => !w.done), i = open.findIndex(w => w.id === id); if (i <= 0) return;
+  const a = S.wishes.indexOf(open[i - 1]), b = S.wishes.indexOf(open[i]), t = S.wishes[a];
+  snap(); S.wishes[a] = S.wishes[b]; S.wishes[b] = t; save(); render(); toast('„' + open[i].name + '“ ist jetzt Platz ' + i + '.', true);
+}
+async function redeem(id) {
+  const w = S.wishes.find(x => x.id === id); if (!w || w.done) return;
+  if (stats().bal < w.price) { toast('Dafür reicht das Guthaben noch nicht.'); return; }
+  if (!(await papa('„' + w.name + '“ einlösen'))) return;
+  const bal = stats().bal;
+  const r = await dialog({title:'Wunsch einlösen?', html:'<p><b>' + esc(w.name) + '</b> für ' + eur(w.price) + '.</p><p>Guthaben jetzt: ' + eur(bal) + '<br>Danach: ' + eur(bal - w.price) + '</p>', buttons:[{t:'Abbrechen', v:null}, {t:'Einlösen', v:1, cls:'gold'}]});
+  if (!r.v) return;
+  snap(); w.done = todayIso();
+  S.moves.push({id:uid(), d:todayIso(), c:-w.price, k:'wunsch', txt:w.name, w:w.id, at:Date.now()});
+  save(); render(); confetti(); toast('Wunsch erfüllt: ' + w.name + '. Viel Spaß, Johann!', true);
+}
+async function rowMenu(id) {
+  const e = S.entries.find(x => x.id === id);
+  if (e) {
+    const r = await dialog({title:fDay.format(parse(e.d)) + ' · ' + dur(e.m), html:'<p>' + esc(taskTxt(e.t) || 'Arbeit') + (e.n ? '<br>' + esc(e.n) : '') + '</p><p>' + dur(e.m) + ' × ' + eur(e.r) + ' pro Stunde = <b>' + eur(pay(e)) + '</b></p>', buttons:[{t:'Löschen', v:'del', cls:'danger'}, {t:'Bearbeiten', v:'edit', cls:'gold'}, {t:'Schließen', v:null}]});
+    if (r.v === 'edit') startEdit(id);
+    if (r.v === 'del') { snap(); S.entries = S.entries.filter(x => x.id !== id); if (D.edit === id) stopEdit(); save(); render(); toast('Eintrag gelöscht.', true); }
+    return;
+  }
+  const m = S.moves.find(x => x.id === id); if (!m) return;
+  const r = await dialog({title:moveName(m) + ' · ' + sgn(m.c), html:'<p>' + fDay.format(parse(m.d)) + (m.txt ? ' · ' + esc(m.txt) : '') + '</p><p class="hint">Löschen geht nur mit Papas PIN.' + (m.k === 'wunsch' ? ' Der Wunsch kommt dann zurück auf die Liste.' : '') + '</p>', buttons:[{t:'Löschen', v:'del', cls:'danger'}, {t:'Schließen', v:null}]});
+  if (r.v === 'del' && await papa('Buchung löschen')) {
+    snap(); S.moves = S.moves.filter(x => x.id !== id);
+    if (m.k === 'wunsch' && m.w) { const w = S.wishes.find(x => x.id === m.w); if (w) w.done = null; }
+    save(); render(); toast('Buchung gelöscht.', true);
+  }
+}
+const normPhone = s => { let p = String(s || '').replace(/\D/g, ''); if (p.indexOf('00') === 0) p = p.slice(2); else if (p.indexOf('0') === 0) p = '49' + p.slice(1); return p.length >= 8 ? p : ''; };
+const waUrl = t => 'https://wa.me/' + (S.phone || '') + '?text=' + encodeURIComponent(t);
+async function papaForm(form) {
+  const kind = form.dataset.form, err = form.querySelector('.err'); err.textContent = '';
+  if (!(await papa('Papa-Bereich'))) return;
+  const fail = t => { err.textContent = t; };
+  if (kind === 'rate') {
+    const c = parseEur($('pRate').value); if (!(c >= 50 && c <= 10000)) return fail('Bitte einen Lohn zwischen 0,50 € und 100 € eingeben.');
+    snap(); S.rate = c; save(); render(); toast('Neuer Stundenlohn: ' + eur(c) + '.', true);
+  } else if (kind === 'bonus') {
+    const c = parseEur($('pBonus').value); if (!(c > 0 && c <= 100000)) return fail('Bitte einen Betrag eingeben, z. B. 5.');
+    snap(); S.moves.push({id:uid(), d:todayIso(), c, k:'bonus', txt:$('pBonusT').value.trim() || 'Bonus von Papa', w:'', at:Date.now()});
+    $('pBonus').value = ''; $('pBonusT').value = ''; save(); render(); toast('Bonus: ' + sgn(c) + ' für Johann.', true);
+  } else if (kind === 'payout') {
+    const c = parseEur($('pPay').value), bal = stats().bal;
+    if (!(c > 0)) return fail('Bitte einen Betrag eingeben, z. B. 20.');
+    if (c > bal) return fail('Höchstens ' + eur(Math.max(0, bal)) + ' – mehr Guthaben ist nicht da.');
+    snap(); S.moves.push({id:uid(), d:todayIso(), c:-c, k:'auszahlung', txt:$('pPayT').value.trim() || 'Auszahlung', w:'', at:Date.now()});
+    $('pPay').value = ''; $('pPayT').value = ''; save(); render(); toast('Ausgezahlt: ' + eur(c) + '.', true);
+  } else if (kind === 'phone') {
+    const raw = $('pPhone').value.trim(), p = normPhone(raw);
+    if (raw && !p) return fail('Die Nummer sieht nicht richtig aus.');
+    S.phone = p; save(false); $('pPhone').value = p ? '+' + p : ''; toast(p ? 'Nummer gespeichert.' : 'Nummer entfernt.');
+  }
+}
+async function changePin() {
+  if (!(await papa('PIN ändern'))) return;
+  const r = await dialog({title:'Neue PIN', html:pinFields, buttons:[{t:'Abbrechen', v:null}, {t:'PIN speichern', v:1, cls:'gold'}], check:pinCheck});
+  if (r.v) { S.pin = hash(r.f.a); save(false); toast('PIN geändert.'); }
+}
+
+/* ---------- Sicherung und Meldung ---------- */
+const b64u = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const unb64u = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+const squeeze = (u8, how) => new Response(new Blob([u8]).stream().pipeThrough(how)).arrayBuffer().then(b => new Uint8Array(b));
+const pack = () => ({v:1, at:Date.now(), r:S.rate, ph:S.phone || '',
+  e:S.entries.map(x => [x.d, x.m, x.t.join('.'), x.n || '', x.r, x.at]),
+  mv:S.moves.map(x => [x.d, x.c, x.k, x.txt || '', x.w || '', x.at]),
+  w:S.wishes.map(x => [x.id, x.name, x.price, x.icon, x.done || ''])});
+function unpack(p) {
+  if (!p || p.v !== 1 || !Array.isArray(p.e) || !Array.isArray(p.w)) throw new Error('format');
+  const okD = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d));
+  return {
+    rate: +p.r >= 50 ? Math.round(+p.r) : 500, phone: String(p.ph || '').replace(/\D/g, ''), at: +p.at || 0,
+    entries: p.e.filter(x => okD(x[0]) && +x[1] > 0 && +x[1] <= 1440).map((x, i) => ({id:'e' + i + uid(), d:String(x[0]), m:Math.round(+x[1]), t:x[2] ? String(x[2]).split('.') : [], n:String(x[3] || '').slice(0, 80), r:+x[4] > 0 ? Math.round(+x[4]) : 500, at:+x[5] || 0})),
+    moves: (p.mv || []).filter(x => okD(x[0]) && isFinite(+x[1])).map((x, i) => ({id:'m' + i + uid(), d:String(x[0]), c:Math.round(+x[1]), k:String(x[2]), txt:String(x[3] || '').slice(0, 60), w:String(x[4] || ''), at:+x[5] || 0})),
+    wishes: p.w.filter(x => x[0] && +x[2] > 0).map(x => ({id:String(x[0]), name:String(x[1] || 'Wunsch').slice(0, 40), price:Math.round(+x[2]), icon:String(x[3] || 'geschenk'), done:okD(x[4]) ? String(x[4]) : null}))
+  };
+}
+async function makeCode() {
+  let u = new TextEncoder().encode(JSON.stringify(pack())), pre = 'WF1.';
+  if (window.CompressionStream) { try { u = await squeeze(u, new CompressionStream('deflate')); pre = 'WF2.'; } catch (e) {} }
+  return pre + b64u(u);
+}
+async function readCode(text) {
+  const i = String(text || '').search(/WF[12]\./); if (i < 0) throw new Error('kein Code');
+  const m = String(text).slice(i).replace(/\s+/g, '').match(/^WF([12])\.([A-Za-z0-9_-]+)/); if (!m) throw new Error('kein Code');
+  let u = unb64u(m[2]);
+  if (m[1] === '2') u = await squeeze(u, new DecompressionStream('deflate'));
+  return unpack(JSON.parse(new TextDecoder().decode(u)));
+}
+const balOf = d => d.entries.reduce((a, e) => a + pay(e), 0) + d.moves.reduce((a, m) => a + m.c, 0);
+async function report() {
+  const st = stats(), top = plan(st)[0], since = S.lastReport || 0;
+  const newE = S.entries.filter(e => e.at > since).sort((a, b) => a.d === b.d ? a.at - b.at : (a.d < b.d ? -1 : 1));
+  const newM = S.moves.filter(m => m.at > since);
+  let t = 'Hallo Papa! Hier ist mein Stand im Wunscherfüller (' + fDate.format(new Date()) + '):\n\n';
+  if (newE.length || newM.length) {
+    t += 'Neu seit meiner letzten Meldung:\n';
+    newE.forEach(e => { t += '• ' + fDay.format(parse(e.d)) + ': ' + dur(e.m) + (e.t.length ? ' – ' + taskTxt(e.t) : '') + (e.n ? ' (' + e.n + ')' : '') + ' = ' + sgn(pay(e)) + '\n'; });
+    newM.forEach(m => { t += '• ' + fDay.format(parse(m.d)) + ': ' + moveName(m) + (m.txt ? ' – ' + m.txt : '') + ' = ' + sgn(m.c) + '\n'; });
+  } else t += 'Seit meiner letzten Meldung ist nichts Neues dazugekommen.\n';
+  t += '\n💰 Guthaben: ' + eur(st.bal) + '\n⏱️ Insgesamt gearbeitet: ' + hrs(st.min) + ' Std.\n';
+  if (top) t += top.can ? '🎉 ' + top.w.name + ': genug gespart! Lösen wir ein?\n' : '🎯 ' + top.w.name + ': noch ' + hrs(top.own) + ' Std. (' + eur(top.miss) + ')\n';
+  t += '\nJohann';
+  const code = await makeCode(), full = t + '\n\nSicherungscode (nur für Notfälle):\n' + code;
+  const mark = () => { S.lastReport = Date.now(); S.lastBackup = Date.now(); save(false); renderBackup(); };
+  await dialog({title:'An Papa melden', html:'<pre class="msg">' + esc(t) + '</pre><p class="hint">Am Ende hängt automatisch dein Sicherungscode.</p><a class="btn gold wide" href="' + esc(waUrl(full)) + '" target="_blank" rel="noopener" data-sent>In WhatsApp öffnen</a>' + (navigator.share ? '<button type="button" class="btn line wide" data-share>Teilen …</button>' : '') + '<button type="button" class="btn line wide" data-copy>Text kopieren</button>' + (S.phone ? '' : '<p class="hint">Tipp: Wenn Papa im Papa-Bereich seine Nummer speichert, landet die Meldung direkt in eurem Chat.</p>'), buttons:[{t:'Fertig', v:null}], copyText:full, onSent:mark});
+}
+async function showCode() {
+  const code = await makeCode(), t = 'Sicherungscode Wunscherfüller (Stand ' + fDate.format(new Date()) + '):\n' + code;
+  const mark = () => { S.lastBackup = Date.now(); save(false); renderBackup(); };
+  await dialog({title:'Sicherungscode', html:'<p>Damit lässt sich dein Stand auf jedem Handy wiederherstellen – im Papa-Bereich unter „Sicherung einspielen“.</p><textarea class="code" readonly rows="4">' + esc(code) + '</textarea><button type="button" class="btn gold wide" data-copy>Code kopieren</button><a class="btn line wide" href="' + esc(waUrl(t)) + '" target="_blank" rel="noopener" data-sent>Per WhatsApp an Papa</a>' + (navigator.share ? '<button type="button" class="btn line wide" data-share>Teilen …</button>' : ''), buttons:[{t:'Fertig', v:null}], copyText:t, onSent:mark});
+}
+async function restore() {
+  if (!(await papa('Sicherung einspielen'))) return;
+  const r = await dialog({title:'Sicherung einspielen', html:'<p>Füge hier die ganze WhatsApp-Nachricht mit dem Sicherungscode ein – oder nur den Code.</p><textarea name="c" rows="5" placeholder="WF2.…"></textarea>', buttons:[{t:'Abbrechen', v:null}, {t:'Prüfen', v:1, cls:'gold'}], check:(v, f) => /WF[12]\./.test(f.c || '') ? '' : 'Da ist kein Sicherungscode drin. Er beginnt mit „WF1.“ oder „WF2.“.'});
+  if (!r.v) return;
+  let d;
+  try { d = await readCode(r.f.c); } catch (e) { await dialog({title:'Das hat nicht geklappt', html:'<p>Der Code ist unvollständig oder beschädigt. Kopier die Nachricht noch einmal ganz und versuch es erneut.</p>', buttons:[{t:'OK', v:null, cls:'gold'}]}); return; }
+  const q = await dialog({title:'Sicherung gefunden', html:'<p>Stand vom ' + (d.at ? fDate.format(new Date(d.at)) : 'unbekannt') + ': ' + d.entries.length + ' Einträge, ' + d.wishes.filter(w => !w.done).length + ' offene Wünsche, Guthaben ' + eur(balOf(d)) + '.</p><p>Alles, was jetzt auf diesem Handy steht, wird dadurch ersetzt.</p>', buttons:[{t:'Abbrechen', v:null}, {t:'Einspielen', v:1, cls:'gold'}]});
+  if (!q.v) return;
+  snap(); Object.assign(S, {rate:d.rate, phone:d.phone || S.phone, entries:d.entries, moves:d.moves, wishes:d.wishes, lastBackup:Date.now(), lastReport:Date.now()});
+  save(); render(); toast('Sicherung eingespielt.', true);
+}
+async function resetAll() {
+  if (!(await papa('Alles löschen'))) return;
+  const r = await dialog({title:'Wirklich alles löschen?', html:'<p>Alle Einträge, Buchungen und Wünsche auf diesem Handy werden gelöscht. Am besten vorher noch eine Sicherung an Papa schicken.</p><label class="fld"><span>Zum Bestätigen LÖSCHEN eintippen</span><input name="x" autocomplete="off"></label>', buttons:[{t:'Abbrechen', v:null}, {t:'Alles löschen', v:1, cls:'danger'}], check:(v, f) => (f.x || '').trim().toUpperCase() === 'LÖSCHEN' ? '' : 'Bitte LÖSCHEN eintippen.'});
+  if (!r.v) return;
+  S = Object.assign(fresh(), {pin:S.pin, phone:S.phone}); undoSnap = null; stopEdit(); save(); render(); toast('Alles zurückgesetzt.');
+}
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act, id = b.dataset.id, v = b.dataset.v;
+  if (a === 'report') report();
+  else if (a === 'code') showCode();
+  else if (a === 'clock-start') { S.timer = Date.now(); save(false); renderClock(); toast('Stempeluhr läuft. Viel Erfolg!'); }
+  else if (a === 'clock-stop') clockStop();
+  else if (a === 'clock-cancel') cancelClock();
+  else if (a === 'minus') { D.m = Math.max(15, D.m - 15); renderForm(); }
+  else if (a === 'plus') { D.m = Math.min(720, D.m + 15); renderForm(); }
+  else if (a === 'dur') { D.m = +v; renderForm(); }
+  else if (a === 'task') { const i = D.t.indexOf(v); if (i >= 0) D.t.splice(i, 1); else D.t.push(v); renderForm(); }
+  else if (a === 'edit-cancel') stopEdit();
+  else if (a === 'wish-new') wishDialog(null);
+  else if (a === 'wish-edit') wishDialog(id);
+  else if (a === 'wish-up') wishUp(id);
+  else if (a === 'wish-redeem') redeem(id);
+  else if (a === 'row') rowMenu(id);
+  else if (a === 'more') { showAll = !showAll; renderHistory(stats()); }
+  else if (a === 'papa') { if (Date.now() < papaUntil) { papaUntil = 0; renderPapa(); } else papa('Papa-Bereich öffnen'); }
+  else if (a === 'pin-change') changePin();
+  else if (a === 'restore') restore();
+  else if (a === 'reset') resetAll();
+  else if (a === 'install' && installEvt) { installEvt.prompt(); installEvt.userChoice.then(() => { installEvt = null; renderInstall(); }, () => {}); }
+  else if (a === 'install-close') { S.installHidden = true; save(false); renderInstall(); }
+});
+$('entryF').addEventListener('submit', submitEntry);
+document.addEventListener('submit', ev => { const f = ev.target.closest('form[data-form]'); if (!f) return; ev.preventDefault(); papaForm(f); });
+
+function start(hot) {
+  load(); if (!testStore()) storeOk = false;
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
+  $('durChips').innerHTML = DURS.map(m => '<button type="button" class="chip" data-act="dur" data-v="' + m + '">' + durShort(m) + '</button>').join('');
+  $('taskChips').innerHTML = TASKS.map(k => '<button type="button" class="chip" data-act="task" data-v="' + k[0] + '">' + k[1] + '</button>').join('');
+  $('fDate').value = todayIso(); $('fDate').max = todayIso();
+  D.t = (S.tasks || []).slice();
+  if (hot && hot.D && !hot.D.edit) { D.m = hot.D.m || 60; D.t = hot.D.t || D.t; }
+  render();
+  window.addEventListener('storage', e => { if (e.key === KEY) { load(); render(); } });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    const t = todayIso();
+    if (t !== formToday) { if ($('fDate').value === formToday && !D.edit) $('fDate').value = t; $('fDate').max = t; formToday = t; }
+    render();
+  });
+  if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+start({});
+}
+</script>
+</body>
+</html>
